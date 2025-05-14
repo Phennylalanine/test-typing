@@ -1,55 +1,64 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Typing Study Game</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Typing Practice Game</title>
   <style>
     body {
-      font-family: sans-serif;
+      font-family: Arial, sans-serif;
       text-align: center;
       padding: 2em;
+      background-color: #f4f4f4;
     }
     #question {
       font-size: 1.5em;
       margin-bottom: 1em;
     }
+    input {
+      font-size: 1.2em;
+      padding: 0.5em;
+      width: 80%;
+      max-width: 400px;
+    }
     #feedback {
       margin-top: 1em;
-      font-weight: bold;
+      font-size: 1.2em;
     }
-    .correct { color: green; }
-    .incorrect { color: red; }
-    .mistake {
-      background-color: yellow;
-      text-decoration: underline;
+    #nextBtn {
+      margin-top: 1em;
+      padding: 0.5em 1em;
+      font-size: 1em;
+      display: none;
+    }
+    #score {
+      margin-top: 2em;
+      font-weight: bold;
     }
   </style>
 </head>
 <body>
 
   <h1>Typing Study Game</h1>
-  <div id="score">Score: 0</div>
-  <div id="question">Loading...</div>
-
-  <input type="text" id="answerInput" placeholder="Type the English sentence" autocomplete="off">
+  <div id="question">Loading question...</div>
+  <input type="text" id="answerInput" placeholder="Type the English answer here" autocomplete="off"/>
   <div id="feedback"></div>
-  <button id="nextBtn" style="display: none;">Next</button>
+  <button id="nextBtn">Next</button>
+  <div id="score">Score: 0</div>
 
+  <!-- ✅ LOAD YOUR questions.js FILE HERE -->
+  <script src="questions.js"></script>
+
+  <!-- Main game logic -->
   <script>
-    const questions = [
-      { jp: "私たちはサッカーがすきです", en: "We like soccer." },
-      { jp: "あなたはりんごをたべました", en: "You ate an apple." },
-      { jp: "かれはせんせいです", en: "He is a teacher." }
-      // Add more questions here...
-    ];
-
+    let currentQuestion = null;
     let score = 0;
-    let currentQuestion = {};
-    const scoreDisplay = document.getElementById("score");
+
     const questionDisplay = document.getElementById("question");
     const answerInput = document.getElementById("answerInput");
     const feedback = document.getElementById("feedback");
     const nextBtn = document.getElementById("nextBtn");
+    const scoreDisplay = document.getElementById("score");
 
     function getRandomQuestion() {
       return questions[Math.floor(Math.random() * questions.length)];
@@ -65,46 +74,14 @@
       answerInput.focus();
     }
 
-    function compareAnswers(user, correct) {
-      if (user === correct) return true;
-
-      // Find and show mistake
-      let result = "";
-      const maxLength = Math.max(user.length, correct.length);
-      for (let i = 0; i < maxLength; i++) {
-        if (user[i] !== correct[i]) {
-          result += `<span class="mistake">${correct[i] ?? ""}</span>`;
-        } else {
-          result += correct[i] ?? "";
+    function showFeedback(correct, expected, userInput) {
+      if (correct) {
+        feedback.innerHTML = "✅ Correct!";
+        score++;
+      } else {
+        // Show the first character they got wrong
+        let mismatchIndex = [...expected].findIndex((char, i) => char !== userInput[i]);
+        if (mismatchIndex === -1 && userInput.length > expected.length) {
+          mismatchIndex = expected.length;
         }
-      }
-      return result;
-    }
-
-    answerInput.addEventListener("keydown", function (e) {
-      if (e.key === "Enter") {
-        const userAnswer = answerInput.value;
-        const correctAnswer = currentQuestion.en;
-        const result = compareAnswers(userAnswer, correctAnswer);
-
-        answerInput.disabled = true;
-
-        if (result === true) {
-          score++;
-          scoreDisplay.textContent = "Score: " + score;
-          feedback.innerHTML = `<span class="correct">Correct!</span>`;
-        } else {
-          feedback.innerHTML = `<span class="incorrect">Incorrect!</span><br>Expected: ${result}<br>Your input: ${userAnswer}`;
-        }
-
-        nextBtn.style.display = "inline-block";
-      }
-    });
-
-    nextBtn.addEventListener("click", showQuestion);
-
-    showQuestion();
-  </script>
-
-</body>
-</html>
+        const correct
