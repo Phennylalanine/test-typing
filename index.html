@@ -84,4 +84,35 @@
         if (mismatchIndex === -1 && userInput.length > expected.length) {
           mismatchIndex = expected.length;
         }
-        const correct
+        const correctPart = expected.slice(0, mismatchIndex);
+        const wrongPart = expected.slice(mismatchIndex);
+        feedback.innerHTML = `❌ Incorrect.<br>Expected: <strong>${correctPart}<span style="color:red">${wrongPart}</span></strong>`;
+      }
+      scoreDisplay.textContent = "Score: " + score;
+      answerInput.disabled = true;
+      nextBtn.style.display = "inline-block";
+    }
+
+    answerInput.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") {
+        const userInput = answerInput.value.trim();
+        const expected = currentQuestion.en.trim();
+        const correct = userInput === expected;
+        showFeedback(correct, expected, userInput);
+      }
+    });
+
+    nextBtn.addEventListener("click", showQuestion);
+
+    // Start game once questions.js is loaded
+    window.onload = () => {
+      if (typeof questions !== "undefined") {
+        showQuestion();
+      } else {
+        questionDisplay.textContent = "Error: questions.js not loaded.";
+      }
+    };
+  </script>
+
+</body>
+</html>
