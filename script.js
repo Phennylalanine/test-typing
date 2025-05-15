@@ -60,7 +60,8 @@ function showFeedback(correct, expected, userInput) {
 
 answerInput.addEventListener("keydown", function(e) {
   if (e.key === "Enter") {
-    if (nextBtn.style.display === "inline-block") {
+    if (answerInput.disabled) {
+      // If answer already submitted, move to next question
       showQuestion();
     } else {
       const userAnswer = answerInput.value.trim();
