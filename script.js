@@ -1,56 +1,74 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Typing Study Game</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      padding: 2em;
-      background-color: #f4f4f4;
-    }
-    #question {
-      font-size: 1.5em;
-      margin-bottom: 1em;
-    }
-    input {
-      font-size: 1.2em;
-      padding: 0.5em;
-      width: 80%;
-      max-width: 400px;
-    }
-    #feedback {
-      margin-top: 1em;
-      font-size: 1.2em;
-    }
-    #nextBtn {
-      margin-top: 1em;
-      padding: 0.5em 1em;
-      font-size: 1em;
-      display: none;
-    }
-    #score {
-      margin-top: 2em;
-      font-weight: bold;
-    }
-  </style>
-</head>
-<body>
+let questions = [];
+let currentQuestion = null;
+let score = 0;
 
-  <h1>Typing Study Game</h1>
-  <div id="question">Loading question...</div>
-  <input type="text" id="answerInput" placeholder="Type the English answer here" autocomplete="off"/>
-  <div id="feedback"></div>
-  <button id="nextBtn">Next</button>
-  <div id="score">Score: 0</div>
+const questionDisplay = document.getElementById("question");
+const answerInput = document.getElementById("answerInput");
+const feedback = document.getElementById("feedback");
+const nextBtn = document.getElementById("nextBtn");
+const scoreDisplay = document.getElementById("score");
 
-  <!-- PapaParse (CSV reader) -->
-  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+// Load CSV with PapaParse
+Papa.parse("questions.csv", {
+  download: true,
+  header: true,
+  complete: function(results) {
+    questions = results.data.filter(q => q.jp && q.en); // remove empty rows
+    showQuestion();
+  }
+});
 
-  <!-- Your game logic (make sure script.js includes the full JS logic) -->
-  <script src="script.js"></script>
+function getRandomQuestion() {
+  return questions[Math.floor(Math.random() * questions.length)];
+}
 
-</body>
-</html>
+function showQuestion() {
+  currentQuestion = getRandomQuestion();
+  questionDisplay.textContent = currentQuestion.jp;
+  answerInput.value = "";
+  answerInput.disabled = false;
+  feedback.innerHTML = "";
+  nextBtn.style.display = "none";
+  answerInput.focus();
+}
+
+function showFeedback(correct, expected, userInput) {
+  if (correct) {
+    feedback.innerHTML = "✅ 正解！Good job!";
+    score++;
+    scoreDisplay.textContent = "Score: " + score;
+  } else {
+    let mismatchIndex = [...expected].findIndex((char, i) => char !== userInput[i]);
+    if (mismatchIndex === -1 && userInput.length > expected.length) {
+      mismatchIndex = expected.length;
+    }
+
+    const correctPart = expected.slice(0, mismatchIndex);
+    const wrongPart = expected.slice(mismatchIndex);
+
+    feedback.innerHTML = `
+      ❌ 間違いがあります<br/>
+      <strong>正解:</strong> ${expected}<br/>
+      <strong>あなたの答え:</strong> ${userInput}<br/>
+      <strong>ここが間違い:</strong> ${correctPart}<span style="color:red">${wrongPart}</span>
+    `;
+  }
+
+  answerInput.disabled = true;
+  nextBtn.style.display = "inline-block";
+}
+
+answerInput.addEventListener("keydown", function(e) {
+  if (e.key === "Enter") {
+    if (nextBtn.style.display === "inline-block") {
+      showQuestion();
+    } else {
+      const userAnswer = answerInput.value.trim();
+      const expected = currentQuestion.en.trim();
+      const isCorrect = userAnswer === expected;
+      showFeedback(isCorrect, expected, userAnswer);
+    }
+  }
+});
+
+nextBtn.addEventListener("click", showQuestion);
