@@ -1,152 +1,47 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Typing Study Game with CSV</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Typing Challenge</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      text-align: center;
+      font-family: sans-serif;
       padding: 2em;
-      background-color: #f4f4f4;
-    }
-    #question {
-      font-size: 1.5em;
-      margin-bottom: 1em;
+      max-width: 600px;
+      margin: auto;
     }
     input {
       font-size: 1.2em;
       padding: 0.5em;
-      width: 80%;
-      max-width: 400px;
+      width: 100%;
+      margin-top: 1em;
     }
     #feedback {
       margin-top: 1em;
-      font-size: 1.2em;
-    }
-    #nextBtn {
-      margin-top: 1em;
-      padding: 0.5em 1em;
-      font-size: 1em;
-      display: none;
+      font-size: 1.1em;
     }
     #score {
       margin-top: 2em;
       font-weight: bold;
     }
-    .highlight {
-      background-color: #ffb3b3;
-      font-weight: bold;
-      color: red;
+    #nextBtn {
+      display: none !important; /* Force it hidden */
     }
   </style>
 </head>
 <body>
-
-  <h1>Typing Study Game</h1>
-  <div id="question">Loading questions...</div>
-  <input type="text" id="answerInput" placeholder="Type the English answer here" autocomplete="off" disabled />
+  <h1>タイピングチャレンジ</h1>
+  <p id="question">Loading...</p>
+  <input type="text" id="answerInput" placeholder="Type the English translation..." autocomplete="off" />
   <div id="feedback"></div>
   <button id="nextBtn">Next</button>
-  <div id="score">Score: 0</div>
+  <p id="score">Score: 0</p>
 
-  <!-- PapaParse CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-<script src="script.js"></script>
-  <script>
-    let questions = [];
-    let currentQuestion = null;
-    let score = 0;
-
-    const questionDisplay = document.getElementById("question");
-    const answerInput = document.getElementById("answerInput");
-    const feedback = document.getElementById("feedback");
-    const nextBtn = document.getElementById("nextBtn");
-    const scoreDisplay = document.getElementById("score");
-
-    function getRandomQuestion() {
-      if (questions.length === 0) return null;
-      return questions[Math.floor(Math.random() * questions.length)];
-    }
-
-    function showQuestion() {
-      currentQuestion = getRandomQuestion();
-      if (!currentQuestion) {
-        questionDisplay.textContent = "No questions loaded.";
-        answerInput.disabled = true;
-        return;
-      }
-      questionDisplay.textContent = currentQuestion.jp;
-      answerInput.value = "";
-      answerInput.disabled = false;
-      feedback.innerHTML = "";
-      nextBtn.style.display = "none";
-      answerInput.focus();
-    }
-
-    function showFeedback(correct, expected, userInput) {
-      if (correct) {
-        feedback.innerHTML = "✅ Correct!";
-        score++;
-        scoreDisplay.textContent = `Score: ${score}`;
-      } else {
-        // Find first wrong character
-        let mismatchIndex = [...expected].findIndex((char, i) => char !== userInput[i]);
-        if (mismatchIndex === -1 && userInput.length > expected.length) {
-          mismatchIndex = expected.length;
-        }
-
-        // Highlight first mistake in user input
-        let highlighted = "";
-        if (mismatchIndex !== -1) {
-          highlighted =
-            userInput.slice(0, mismatchIndex) +
-            `<span class="highlight">${userInput[mismatchIndex] || "(missing)"}</span>` +
-            userInput.slice(mismatchIndex + 1);
-        } else {
-          highlighted = userInput; // no mismatch found (maybe input shorter)
-        }
-
-        feedback.innerHTML = `❌ Incorrect. First mistake at position ${mismatchIndex + 1}:<br> Your input: ${highlighted}`;
-      }
-    }
-
-    answerInput.addEventListener("keydown", function(event) {
-      if (event.key === "Enter") {
-        if (answerInput.disabled) return; // ignore if disabled
-        const userAnswer = answerInput.value;
-        const correctAnswer = currentQuestion.en;
-        const isCorrect = userAnswer === correctAnswer;
-
-        answerInput.disabled = true;
-        showFeedback(isCorrect, correctAnswer, userAnswer);
-        nextBtn.style.display = "inline-block";
-      }
-    });
-
-    nextBtn.addEventListener("click", () => {
-      showQuestion();
-    });
-
-    async function loadQuestions() {
-      try {
-        const response = await fetch('questions.csv');
-        if (!response.ok) throw new Error('Failed to load CSV file');
-
-        const csvText = await response.text();
-        const results = Papa.parse(csvText, { header: true });
-        questions = results.data.filter(q => q.jp && q.en); // filter out empty lines
-        showQuestion();
-      } catch (err) {
-        questionDisplay.textContent = "Error loading questions.";
-        console.error(err);
-      }
-    }
-
-    loadQuestions();
-
-  </script>
-
+  <!-- PapaParse for CSV loading -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  
+  <!-- Link to external script.js, use cache buster to force latest -->
+  <script src="script.js?v=2"></script>
 </body>
 </html>
