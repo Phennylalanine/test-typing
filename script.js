@@ -6,6 +6,7 @@ const questionDisplay = document.getElementById("question");
 const answerInput = document.getElementById("answerInput");
 const feedback = document.getElementById("feedback");
 const nextBtn = document.getElementById("nextBtn");
+const speakBtn = document.getElementById("speakBtn");
 const scoreDisplay = document.getElementById("score");
 
 // Load CSV with PapaParse
@@ -30,7 +31,6 @@ function showQuestion() {
   feedback.innerHTML = "";
   nextBtn.style.display = "none";
   answerInput.focus();
-  speak(currentQuestion.en); // 🔈 Speak English word
 }
 
 function showFeedback(correct, expected, userInput) {
@@ -61,7 +61,9 @@ function showFeedback(correct, expected, userInput) {
 
 answerInput.addEventListener("keydown", function(e) {
   if (e.key === "Enter") {
-    if (!answerInput.disabled) {
+    if (answerInput.disabled) {
+      showQuestion();
+    } else {
       const userAnswer = answerInput.value.trim();
       const expected = currentQuestion.en.trim();
       const isCorrect = userAnswer === expected;
@@ -72,14 +74,11 @@ answerInput.addEventListener("keydown", function(e) {
 
 nextBtn.addEventListener("click", showQuestion);
 
-// 🔈 Text-to-speech for English word
-function speak(text) {
-  if ('speechSynthesis' in window) {
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'en-US';
-    speechSynthesis.cancel(); // Cancel any existing speech
+// 🔊 Text-to-speech
+speakBtn.addEventListener("click", function() {
+  if (currentQuestion && currentQuestion.en) {
+    const utterance = new SpeechSynthesisUtterance(currentQuestion.en);
+    utterance.lang = "en-US";
     speechSynthesis.speak(utterance);
-  } else {
-    console.warn("Speech Synthesis not supported.");
   }
-}
+});
