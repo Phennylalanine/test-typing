@@ -1,47 +1,54 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Typing Challenge</title>
   <style>
     body {
-      font-family: sans-serif;
-      padding: 2em;
-      max-width: 600px;
-      margin: auto;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin-top: 50px;
+      background-color: #f9f9f9;
     }
-    input {
+    #question {
+      font-size: 2em;
+      margin-bottom: 20px;
+    }
+    #answerInput {
       font-size: 1.2em;
-      padding: 0.5em;
-      width: 100%;
-      margin-top: 1em;
-    }
-    #feedback {
-      margin-top: 1em;
-      font-size: 1.1em;
-    }
-    #score {
-      margin-top: 2em;
-      font-weight: bold;
+      padding: 10px;
+      width: 300px;
     }
     #nextBtn {
-      display: none !important; /* Force it hidden */
+      display: none;
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 1em;
+    }
+    #feedback {
+      margin-top: 20px;
+      font-size: 1.2em;
+    }
+    #score {
+      position: absolute;
+      top: 10px;
+      right: 20px;
+      font-weight: bold;
     }
   </style>
 </head>
 <body>
-  <h1>タイピングチャレンジ</h1>
-  <p id="question">Loading...</p>
-  <input type="text" id="answerInput" placeholder="Type the English translation..." autocomplete="off" />
+  <div id="score">Score: 0</div>
+  <div id="question">Loading...</div>
+  <input type="text" id="answerInput" placeholder="Type the English here" autocomplete="off"/>
   <div id="feedback"></div>
   <button id="nextBtn">Next</button>
-  <p id="score">Score: 0</p>
 
   <!-- PapaParse for CSV loading -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-  
-  <!-- Link to external script.js, use cache buster to force latest -->
-  <script src="script.js?v=2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
+
+  <!-- Your custom script -->
+  <script src="script.js?v=3"></script>
 </body>
 </html>
