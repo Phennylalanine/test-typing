@@ -28,8 +28,9 @@ function showQuestion() {
   answerInput.value = "";
   answerInput.disabled = false;
   feedback.innerHTML = "";
-  nextBtn.style.display = "none"; // Always hide the button (optional)
+  nextBtn.style.display = "none";
   answerInput.focus();
+  speak(currentQuestion.en); // 🔈 Speak English word
 }
 
 function showFeedback(correct, expected, userInput) {
@@ -55,18 +56,13 @@ function showFeedback(correct, expected, userInput) {
   }
 
   answerInput.disabled = true;
-  nextBtn.style.display = "none"; // Always hide the button (optional)
+  nextBtn.style.display = "inline-block";
 }
 
 answerInput.addEventListener("keydown", function(e) {
   if (e.key === "Enter") {
-    const userAnswer = answerInput.value.trim();
-
-    if (answerInput.disabled) {
-      // If answer already submitted, move to next question
-      showQuestion();
-    } else if (userAnswer !== "") {
-      // Only process if input is not blank
+    if (!answerInput.disabled) {
+      const userAnswer = answerInput.value.trim();
       const expected = currentQuestion.en.trim();
       const isCorrect = userAnswer === expected;
       showFeedback(isCorrect, expected, userAnswer);
@@ -74,5 +70,16 @@ answerInput.addEventListener("keydown", function(e) {
   }
 });
 
-// You can keep this if you want button support too:
 nextBtn.addEventListener("click", showQuestion);
+
+// 🔈 Text-to-speech for English word
+function speak(text) {
+  if ('speechSynthesis' in window) {
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'en-US';
+    speechSynthesis.cancel(); // Cancel any existing speech
+    speechSynthesis.speak(utterance);
+  } else {
+    console.warn("Speech Synthesis not supported.");
+  }
+}
