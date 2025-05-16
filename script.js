@@ -6,7 +6,6 @@ const questionDisplay = document.getElementById("question");
 const answerInput = document.getElementById("answerInput");
 const feedback = document.getElementById("feedback");
 const nextBtn = document.getElementById("nextBtn");
-const speakBtn = document.getElementById("speakBtn");
 const scoreDisplay = document.getElementById("score");
 
 // Load CSV with PapaParse
@@ -23,6 +22,12 @@ function getRandomQuestion() {
   return questions[Math.floor(Math.random() * questions.length)];
 }
 
+function speak(text) {
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = "en-US";
+  speechSynthesis.speak(utterance);
+}
+
 function showQuestion() {
   currentQuestion = getRandomQuestion();
   questionDisplay.textContent = currentQuestion.jp;
@@ -31,6 +36,11 @@ function showQuestion() {
   feedback.innerHTML = "";
   nextBtn.style.display = "none";
   answerInput.focus();
+
+  // Speak the English word automatically
+  if (currentQuestion.en) {
+    speak(currentQuestion.en);
+  }
 }
 
 function showFeedback(correct, expected, userInput) {
@@ -74,11 +84,12 @@ answerInput.addEventListener("keydown", function(e) {
 
 nextBtn.addEventListener("click", showQuestion);
 
-// 🔊 Text-to-speech
-speakBtn.addEventListener("click", function() {
-  if (currentQuestion && currentQuestion.en) {
-    const utterance = new SpeechSynthesisUtterance(currentQuestion.en);
-    utterance.lang = "en-US";
-    speechSynthesis.speak(utterance);
-  }
-});
+// Optional: Manual speak button (if needed)
+const speakBtn = document.getElementById("speakBtn");
+if (speakBtn) {
+  speakBtn.addEventListener("click", function() {
+    if (currentQuestion && currentQuestion.en) {
+      speak(currentQuestion.en);
+    }
+  });
+}
