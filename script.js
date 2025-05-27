@@ -7,17 +7,26 @@ const answerInput = document.getElementById("answerInput");
 const feedback = document.getElementById("feedback");
 const nextBtn = document.getElementById("nextBtn");
 const scoreDisplay = document.getElementById("score");
-const correctSound = document.getElementById("correctSound"); // audio element
+const startScreen = document.getElementById("startScreen");
+const gameScreen = document.getElementById("gameScreen");
 
-// Load CSV with PapaParse
-Papa.parse("questions.csv", {
-  download: true,
-  header: true,
-  complete: function(results) {
-    questions = results.data.filter(q => q.jp && q.en); // remove empty rows
-    showQuestion();
-  }
-});
+// Load CSV on start
+function loadCSVAndStart() {
+  Papa.parse("questions.csv", {
+    download: true,
+    header: true,
+    complete: function(results) {
+      questions = results.data.filter(q => q.jp && q.en);
+      startGame();
+    }
+  });
+}
+
+function startGame() {
+  startScreen.style.display = "none";
+  gameScreen.style.display = "block";
+  showQuestion();
+}
 
 function getRandomQuestion() {
   return questions[Math.floor(Math.random() * questions.length)];
@@ -49,37 +58,43 @@ function showFeedback(correct, expected, userInput) {
     score++;
     scoreDisplay.textContent = "Score: " + score;
 
-    // Play correct answer sound
-    if (correctSound) {
-      correctSound.currentTime = 0;
-      correctSound.play();
-    }
+    const correctSound = document.getElementById("correctSound");
+    if (correctSound) correctSound.play();
   } else {
-    let mismatchIndex = [...expected].findIndex((char, i) => char !== userInput[i]);
-    if (mismatchIndex === -1 && userInput.length > expected.length) {
-      mismatchIndex = expected.length;
+    let mismatchIndex = -1;
+    const minLength = Math.min(expected.length, userInput.length);
+    for (let i = 0; i < minLength; i++) {
+      if (expected[i] !== userInput[i]) {
+        mismatchIndex = i;
+        break;
+      }
+    }
+    if (mismatchIndex === -1) {
+      mismatchIndex = minLength;
     }
 
     const correctPart = expected.slice(0, mismatchIndex);
-    const wrongPart = expected.slice(mismatchIndex);
+    const wrongPart = expected.slice(mismatchIndex) || "<span style='color:green'>(missing)</span>";
+    const userWrong = userInput.slice(mismatchIndex) || "<span style='color:red'>(missing)</span>";
 
     feedback.innerHTML = `
       ❌ 間違いがあります<br/>
-      <strong>正解:</strong> ${expected}<br/>
-      <strong>あなたの答え:</strong> ${userInput}<br/>
-      <strong>ここが間違い:</strong> ${correctPart}<span style="color:red">${wrongPart}</span>
+      <strong>正解:</strong> ${correctPart}<span style="color:green">${wrongPart}</span><br/>
+      <strong>あなたの答え:</strong> ${correctPart}<span style="color:red">${userWrong}</span>
     `;
+
+    const wrongSound = document.getElementById("wrongSound");
+    if (wrongSound) wrongSound.play();
   }
 
   answerInput.disabled = true;
   nextBtn.style.display = "inline-block";
-  nextBtn.focus(); // Focus the Next button
 }
 
 answerInput.addEventListener("keydown", function(e) {
   if (e.key === "Enter") {
     if (answerInput.disabled) {
-      nextBtn.click();
+      showQuestion();
     } else {
       const userAnswer = answerInput.value.trim();
       const expected = currentQuestion.en.trim();
@@ -99,3 +114,9 @@ if (speakBtn) {
     }
   });
 }
+
+// Start button listener
+document.getElementById("startBtn").addEventListener("click", loadCSVAndStart);
+
+// Show the start screen initially
+startScreen.style.display = "block";
