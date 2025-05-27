@@ -10,7 +10,6 @@ const scoreDisplay = document.getElementById("score");
 const startScreen = document.getElementById("startScreen");
 const gameScreen = document.getElementById("gameScreen");
 
-// Load CSV on start
 function loadCSVAndStart() {
   Papa.parse("questions.csv", {
     download: true,
@@ -57,9 +56,7 @@ function showFeedback(correct, expected, userInput) {
     feedback.innerHTML = "✅ 正解！Good job!";
     score++;
     scoreDisplay.textContent = "Score: " + score;
-
-    const correctSound = document.getElementById("correctSound");
-    if (correctSound) correctSound.play();
+    document.getElementById("correctSound").play();
   } else {
     let mismatchIndex = -1;
     const minLength = Math.min(expected.length, userInput.length);
@@ -83,8 +80,7 @@ function showFeedback(correct, expected, userInput) {
       <strong>あなたの答え:</strong> ${correctPart}<span style="color:red">${userWrong}</span>
     `;
 
-    const wrongSound = document.getElementById("wrongSound");
-    if (wrongSound) wrongSound.play();
+    document.getElementById("wrongSound").play();
   }
 
   answerInput.disabled = true;
@@ -94,6 +90,7 @@ function showFeedback(correct, expected, userInput) {
 answerInput.addEventListener("keydown", function(e) {
   if (e.key === "Enter") {
     if (answerInput.disabled) {
+      // If input is disabled, move to the next question
       showQuestion();
     } else {
       const userAnswer = answerInput.value.trim();
@@ -106,17 +103,12 @@ answerInput.addEventListener("keydown", function(e) {
 
 nextBtn.addEventListener("click", showQuestion);
 
-const speakBtn = document.getElementById("speakBtn");
-if (speakBtn) {
-  speakBtn.addEventListener("click", function() {
-    if (currentQuestion && currentQuestion.en) {
-      speak(currentQuestion.en);
-    }
-  });
-}
+document.getElementById("speakBtn").addEventListener("click", function() {
+  if (currentQuestion && currentQuestion.en) {
+    speak(currentQuestion.en);
+  }
+});
 
-// Start button listener
 document.getElementById("startBtn").addEventListener("click", loadCSVAndStart);
 
-// Show the start screen initially
 startScreen.style.display = "block";
