@@ -3,32 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Typing Challenge with Bonus Minigame</title>
+  <title>Typing Challenge + Minigame</title>
   <style>
     body {
       font-family: Arial, sans-serif;
       text-align: center;
-      margin-top: 50px;
       background-color: #f9f9f9;
-    }
-    #question {
-      font-size: 2em;
-      margin-bottom: 20px;
-    }
-    #answerInput {
-      font-size: 1.2em;
-      padding: 10px;
-      width: 300px;
-    }
-    #nextBtn {
-      display: none;
-      margin-top: 20px;
-      padding: 10px 20px;
-      font-size: 1em;
-    }
-    #feedback {
-      margin-top: 20px;
-      font-size: 1.2em;
     }
     #score {
       position: absolute;
@@ -36,57 +16,247 @@
       right: 20px;
       font-weight: bold;
     }
-    #streak {
-      margin-top: 10px;
-      font-weight: bold;
+    #quizScreen, #minigameScreen {
+      display: none;
+    }
+    #question {
+      font-size: 2em;
+      margin-top: 100px;
+    }
+    #answerInput {
+      font-size: 1.2em;
+      padding: 10px;
+      width: 300px;
+    }
+    #feedback {
+      margin-top: 20px;
       font-size: 1.2em;
     }
-    #minigameScreen {
-      display: none;
-      text-align: center;
+    #nextBtn {
       margin-top: 20px;
+      padding: 10px 20px;
     }
-    #minigameCanvas {
-      border: 2px solid black;
-      background-color: white;
+    canvas {
+      border: 1px solid #333;
+      background-color: #222;
+    }
+    #streakLabel {
+      position: absolute;
+      top: 10px;
+      left: 20px;
+      font-weight: bold;
     }
   </style>
 </head>
 <body>
 
-  <!-- Start Screen -->
-  <div id="startScreen">
-    <h1>Typing Challenge</h1>
-    <button id="startBtn">スタート</button>
-  </div>
+  <div id="score">Score: 0</div>
+  <div id="streakLabel">連続正解: 0</div>
 
-  <!-- Main Game Screen -->
-  <div id="gameScreen" style="display:none;">
-    <div id="score">Score: 0</div>
-    <div id="streak">連続正解: 0</div>
+  <div id="quizScreen">
     <div id="question">Loading...</div>
-    <input type="text" id="answerInput" placeholder="Type the English here" autocomplete="off" />
+    <input type="text" id="answerInput" placeholder="Type the English here" autocomplete="off"/>
     <div id="feedback"></div>
     <button id="speakBtn">🔈 Speak</button>
     <button id="nextBtn" style="display: none;">Next</button>
   </div>
 
-  <!-- Minigame Screen -->
   <div id="minigameScreen">
-    <h2>ボーナスゲーム：敵を倒そう！</h2>
-    <canvas id="minigameCanvas" width="400" height="400"></canvas><br/>
-    <button onclick="endMinigame()">クイズに戻る</button>
+    <canvas id="gameCanvas" width="600" height="400"></canvas>
+    <p style="color: white;">弾の速さと数が増えます！敵をよけて倒そう！</p>
+    <button onclick="endMinigame()">戻る (Return)</button>
   </div>
 
-  <!-- Sounds -->
-  <audio id="correctSound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_3d18a1db4e.mp3?filename=correct-2-46134.mp3" preload="auto"></audio>
-  <audio id="wrongSound" src="https://cdn.pixabay.com/download/audio/2022/03/14/audio_8913d9b6b6.mp3?filename=wrong-1-6342.mp3" preload="auto"></audio>
-
-  <!-- PapaParse for CSV loading -->
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
+  <script>
+    let questions = [], currentQuestion = null, score = 0, streak = 0;
+    const questionDisplay = document.getElementById("question");
+    const answerInput = document.getElementById("answerInput");
+    const feedback = document.getElementById("feedback");
+    const nextBtn = document.getElementById("nextBtn");
+    const scoreDisplay = document.getElementById("score");
+    const streakLabel = document.getElementById("streakLabel");
+    const quizScreen = document.getElementById("quizScreen");
+    const minigameScreen = document.getElementById("minigameScreen");
 
-  <!-- Your custom script -->
-  <script src="script.js?v=4"></script>
+    Papa.parse("questions.csv", {
+      download: true,
+      header: true,
+      complete: function(results) {
+        questions = results.data.filter(q => q.jp && q.en);
+        quizScreen.style.display = "block";
+        showQuestion();
+      }
+    });
 
+    function getRandomQuestion() {
+      return questions[Math.floor(Math.random() * questions.length)];
+    }
+
+    function speak(text) {
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = "en-US";
+      speechSynthesis.speak(utterance);
+    }
+
+    function showQuestion() {
+      currentQuestion = getRandomQuestion();
+      questionDisplay.textContent = currentQuestion.jp;
+      answerInput.value = "";
+      answerInput.disabled = false;
+      feedback.innerHTML = "";
+      nextBtn.style.display = "none";
+      answerInput.focus();
+
+      if (currentQuestion.en) speak(currentQuestion.en);
+    }
+
+    function showFeedback(correct, expected, userInput) {
+      if (correct) {
+        feedback.innerHTML = "✅ 正解！Good job!";
+        score++;
+        streak++;
+        if (streak % 5 === 0) {
+          startMinigame();
+        }
+      } else {
+        const mismatchIndex = [...expected].findIndex((char, i) => char !== userInput[i]);
+        const correctPart = expected.slice(0, mismatchIndex);
+        const wrongPart = expected.slice(mismatchIndex);
+        feedback.innerHTML = `
+          ❌ 間違いがあります<br/>
+          <strong>正解:</strong> ${expected}<br/>
+          <strong>あなたの答え:</strong> ${userInput}<br/>
+          <strong>ここが間違い:</strong> ${correctPart}<span style="color:red">${wrongPart}</span>
+        `;
+        streak = 0;
+      }
+
+      scoreDisplay.textContent = "Score: " + score;
+      streakLabel.textContent = "連続正解: " + streak;
+      answerInput.disabled = true;
+      nextBtn.style.display = "inline-block";
+    }
+
+    answerInput.addEventListener("keydown", function(e) {
+      if (e.key === "Enter") {
+        if (answerInput.disabled) {
+          showQuestion();
+        } else {
+          const userAnswer = answerInput.value.trim();
+          const expected = currentQuestion.en.trim();
+          const isCorrect = userAnswer === expected;
+          showFeedback(isCorrect, expected, userAnswer);
+        }
+      }
+    });
+
+    nextBtn.addEventListener("click", showQuestion);
+    document.getElementById("speakBtn").addEventListener("click", () => speak(currentQuestion.en));
+
+    // ===== MINIGAME =====
+
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    let player = { x: 300, y: 200, dir: { x: 1, y: 0 }, size: 20 };
+    let bullets = [], enemies = [];
+    let lastShotTime = 0;
+    let bulletSpeed = 2 + streak / 5;
+    let bulletCount = 1 + Math.floor(streak / 5);
+
+    function startMinigame() {
+      quizScreen.style.display = "none";
+      minigameScreen.style.display = "block";
+      bullets = [];
+      enemies = [];
+      player.x = 300; player.y = 200;
+      bulletSpeed = 2 + streak / 5;
+      bulletCount = 1 + Math.floor(streak / 5);
+      lastShotTime = Date.now();
+      requestAnimationFrame(gameLoop);
+      spawnEnemyLoop();
+    }
+
+    function endMinigame() {
+      minigameScreen.style.display = "none";
+      quizScreen.style.display = "block";
+      showQuestion();
+    }
+
+    function gameLoop() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      ctx.fillStyle = "white";
+      ctx.fillRect(player.x - player.size/2, player.y - player.size/2, player.size, player.size);
+
+      const now = Date.now();
+      if (now - lastShotTime >= 3000) {
+        fireProjectile();
+        lastShotTime = now;
+      }
+
+      bullets.forEach((b, i) => {
+        b.x += b.dx * bulletSpeed;
+        b.y += b.dy * bulletSpeed;
+        ctx.fillStyle = "yellow";
+        ctx.beginPath();
+        ctx.arc(b.x, b.y, 5, 0, 2 * Math.PI);
+        ctx.fill();
+        if (b.x < 0 || b.x > canvas.width || b.y < 0 || b.y > canvas.height) bullets.splice(i, 1);
+      });
+
+      enemies.forEach((e, i) => {
+        const dx = player.x - e.x;
+        const dy = player.y - e.y;
+        const dist = Math.hypot(dx, dy);
+        e.x += dx / dist;
+        e.y += dy / dist;
+        ctx.fillStyle = "red";
+        ctx.beginPath();
+        ctx.arc(e.x, e.y, 10, 0, 2 * Math.PI);
+        ctx.fill();
+
+        bullets.forEach((b, j) => {
+          if (Math.hypot(b.x - e.x, b.y - e.y) < 10) {
+            enemies.splice(i, 1);
+            bullets.splice(j, 1);
+          }
+        });
+      });
+
+      requestAnimationFrame(gameLoop);
+    }
+
+    function fireProjectile() {
+      for (let i = 0; i < bulletCount; i++) {
+        bullets.push({
+          x: player.x,
+          y: player.y,
+          dx: player.dir.x,
+          dy: player.dir.y
+        });
+      }
+    }
+
+    function spawnEnemyLoop() {
+      if (minigameScreen.style.display === "block") {
+        const side = Math.floor(Math.random() * 4);
+        let ex, ey;
+        if (side === 0) { ex = -10; ey = Math.random() * canvas.height; }
+        if (side === 1) { ex = canvas.width + 10; ey = Math.random() * canvas.height; }
+        if (side === 2) { ex = Math.random() * canvas.width; ey = -10; }
+        if (side === 3) { ex = Math.random() * canvas.width; ey = canvas.height + 10; }
+        enemies.push({ x: ex, y: ey });
+        setTimeout(spawnEnemyLoop, 2000);
+      }
+    }
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowUp") player.dir = { x: 0, y: -1 };
+      if (e.key === "ArrowDown") player.dir = { x: 0, y: 1 };
+      if (e.key === "ArrowLeft") player.dir = { x: -1, y: 0 };
+      if (e.key === "ArrowRight") player.dir = { x: 1, y: 0 };
+    });
+  </script>
 </body>
 </html>
