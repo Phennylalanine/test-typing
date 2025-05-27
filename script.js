@@ -1,37 +1,22 @@
-let questions = [];
-let currentQuestion = null;
-let score = 0;
-let streak = 0;
-let streakUpgrades = 0;
-
+let questions = [], currentQuestion = null, score = 0, streak = 0;
 const questionDisplay = document.getElementById("question");
 const answerInput = document.getElementById("answerInput");
 const feedback = document.getElementById("feedback");
 const nextBtn = document.getElementById("nextBtn");
 const scoreDisplay = document.getElementById("score");
-const startScreen = document.getElementById("startScreen");
-const gameScreen = document.getElementById("gameScreen");
-const streakDisplay = document.getElementById("streak");
+const streakLabel = document.getElementById("streakLabel");
+const quizScreen = document.getElementById("quizScreen");
 const minigameScreen = document.getElementById("minigameScreen");
-const minigameCanvas = document.getElementById("minigameCanvas");
-const ctx = minigameCanvas.getContext("2d");
 
-function loadCSVAndStart() {
-  Papa.parse("questions.csv", {
-    download: true,
-    header: true,
-    complete: function(results) {
-      questions = results.data.filter(q => q.jp && q.en);
-      startGame();
-    }
-  });
-}
-
-function startGame() {
-  startScreen.style.display = "none";
-  gameScreen.style.display = "block";
-  showQuestion();
-}
+Papa.parse("questions.csv", {
+  download: true,
+  header: true,
+  complete: function(results) {
+    questions = results.data.filter(q => q.jp && q.en);
+    quizScreen.style.display = "block";
+    showQuestion();
+  }
+});
 
 function getRandomQuestion() {
   return questions[Math.floor(Math.random() * questions.length)];
@@ -51,6 +36,7 @@ function showQuestion() {
   feedback.innerHTML = "";
   nextBtn.style.display = "none";
   answerInput.focus();
+
   if (currentQuestion.en) speak(currentQuestion.en);
 }
 
@@ -59,38 +45,24 @@ function showFeedback(correct, expected, userInput) {
     feedback.innerHTML = "✅ 正解！Good job!";
     score++;
     streak++;
-    scoreDisplay.textContent = "Score: " + score;
-    streakDisplay.textContent = "連続正解: " + streak;
-    document.getElementById("correctSound").play();
-
     if (streak % 5 === 0) {
-      streakUpgrades++;
-      setTimeout(startMinigame, 500);
-      return;
+      startMinigame();
     }
   } else {
-    streak = 0;
-    streakDisplay.textContent = "連続正解: 0";
-    const minLength = Math.min(expected.length, userInput.length);
-    let mismatchIndex = -1;
-    for (let i = 0; i < minLength; i++) {
-      if (expected[i] !== userInput[i]) {
-        mismatchIndex = i;
-        break;
-      }
-    }
-    if (mismatchIndex === -1) mismatchIndex = minLength;
+    const mismatchIndex = [...expected].findIndex((char, i) => char !== userInput[i]);
     const correctPart = expected.slice(0, mismatchIndex);
-    const wrongPart = expected.slice(mismatchIndex) || "<span style='color:green'>(missing)</span>";
-    const userWrong = userInput.slice(mismatchIndex) || "<span style='color:red'>(missing)</span>";
+    const wrongPart = expected.slice(mismatchIndex);
     feedback.innerHTML = `
       ❌ 間違いがあります<br/>
-      <strong>正解:</strong> ${correctPart}<span style="color:green">${wrongPart}</span><br/>
-      <strong>あなたの答え:</strong> ${correctPart}<span style="color:red">${userWrong}</span>
+      <strong>正解:</strong> ${expected}<br/>
+      <strong>あなたの答え:</strong> ${userInput}<br/>
+      <strong>ここが間違い:</strong> ${correctPart}<span style="color:red">${wrongPart}</span>
     `;
-    document.getElementById("wrongSound").play();
+    streak = 0;
   }
 
+  scoreDisplay.textContent = "Score: " + score;
+  streakLabel.textContent = "連続正解: " + streak;
   answerInput.disabled = true;
   nextBtn.style.display = "inline-block";
 }
@@ -110,87 +82,108 @@ answerInput.addEventListener("keydown", function(e) {
 
 nextBtn.addEventListener("click", showQuestion);
 document.getElementById("speakBtn").addEventListener("click", () => speak(currentQuestion.en));
-document.getElementById("startBtn").addEventListener("click", loadCSVAndStart);
-startScreen.style.display = "block";
 
-// --- BONUS GAME VARIABLES ---
-let player = { x: 200, y: 200 };
-let bullets = [];
-let enemies = [];
-let keys = {};
+// ========== MINIGAME LOGIC ==========
+
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+let player = { x: 300, y: 200, dir: { x: 1, y: 0 }, size: 20 };
+let bullets = [], enemies = [];
+let lastShotTime = 0;
+let bulletSpeed = 2 + streak / 5;
+let bulletCount = 1 + Math.floor(streak / 5);
 
 function startMinigame() {
-  gameScreen.style.display = "none";
+  quizScreen.style.display = "none";
   minigameScreen.style.display = "block";
   bullets = [];
-  enemies = Array.from({ length: 5 }, () => ({
-    x: Math.random() * 400,
-    y: Math.random() * 400,
-    hp: 2 + streakUpgrades,
-  }));
-
-  window.addEventListener("keydown", e => keys[e.key] = true);
-  window.addEventListener("keyup", e => keys[e.key] = false);
-
-  setInterval(() => {
-    bullets.push({
-      x: player.x,
-      y: player.y,
-      dx: Math.random() * 2 - 1,
-      dy: Math.random() * 2 - 1,
-      speed: 2 + streakUpgrades,
-      damage: 1 + streakUpgrades,
-    });
-  }, 300);
-
-  requestAnimationFrame(updateMinigame);
-}
-
-function updateMinigame() {
-  ctx.clearRect(0, 0, 400, 400);
-
-  // Move player
-  if (keys["ArrowUp"] || keys["w"]) player.y -= 2;
-  if (keys["ArrowDown"] || keys["s"]) player.y += 2;
-  if (keys["ArrowLeft"] || keys["a"]) player.x -= 2;
-  if (keys["ArrowRight"] || keys["d"]) player.x += 2;
-
-  // Draw player
-  ctx.fillStyle = "blue";
-  ctx.fillRect(player.x - 5, player.y - 5, 10, 10);
-
-  // Update and draw bullets
-  ctx.fillStyle = "black";
-  bullets.forEach((b, i) => {
-    b.x += b.dx * b.speed;
-    b.y += b.dy * b.speed;
-    ctx.fillRect(b.x, b.y, 4, 4);
-
-    // Check collisions
-    enemies.forEach(e => {
-      const dist = Math.hypot(b.x - e.x, b.y - e.y);
-      if (dist < 10) {
-        e.hp -= b.damage;
-        bullets.splice(i, 1);
-      }
-    });
-  });
-
-  // Remove dead enemies
-  enemies = enemies.filter(e => e.hp > 0);
-
-  // Draw enemies
-  ctx.fillStyle = "red";
-  enemies.forEach(e => ctx.beginPath() || ctx.arc(e.x, e.y, 8, 0, Math.PI * 2) || ctx.fill());
-
-  // End condition
-  if (enemies.length > 0) {
-    requestAnimationFrame(updateMinigame);
-  }
+  enemies = [];
+  player.x = 300;
+  player.y = 200;
+  bulletSpeed = 2 + streak / 5;
+  bulletCount = 1 + Math.floor(streak / 5);
+  lastShotTime = Date.now();
+  requestAnimationFrame(gameLoop);
+  spawnEnemyLoop();
 }
 
 function endMinigame() {
   minigameScreen.style.display = "none";
-  gameScreen.style.display = "block";
+  quizScreen.style.display = "block";
   showQuestion();
 }
+
+function gameLoop() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  ctx.fillStyle = "white";
+  ctx.fillRect(player.x - player.size/2, player.y - player.size/2, player.size, player.size);
+
+  const now = Date.now();
+  if (now - lastShotTime >= 3000) {
+    fireProjectile();
+    lastShotTime = now;
+  }
+
+  bullets.forEach((b, i) => {
+    b.x += b.dx * bulletSpeed;
+    b.y += b.dy * bulletSpeed;
+    ctx.fillStyle = "yellow";
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, 5, 0, 2 * Math.PI);
+    ctx.fill();
+    if (b.x < 0 || b.x > canvas.width || b.y < 0 || b.y > canvas.height) bullets.splice(i, 1);
+  });
+
+  enemies.forEach((e, i) => {
+    const dx = player.x - e.x;
+    const dy = player.y - e.y;
+    const dist = Math.hypot(dx, dy);
+    e.x += dx / dist;
+    e.y += dy / dist;
+    ctx.fillStyle = "red";
+    ctx.beginPath();
+    ctx.arc(e.x, e.y, 10, 0, 2 * Math.PI);
+    ctx.fill();
+
+    bullets.forEach((b, j) => {
+      if (Math.hypot(b.x - e.x, b.y - e.y) < 10) {
+        enemies.splice(i, 1);
+        bullets.splice(j, 1);
+      }
+    });
+  });
+
+  requestAnimationFrame(gameLoop);
+}
+
+function fireProjectile() {
+  for (let i = 0; i < bulletCount; i++) {
+    bullets.push({
+      x: player.x,
+      y: player.y,
+      dx: player.dir.x,
+      dy: player.dir.y
+    });
+  }
+}
+
+function spawnEnemyLoop() {
+  if (minigameScreen.style.display === "block") {
+    const side = Math.floor(Math.random() * 4);
+    let ex, ey;
+    if (side === 0) { ex = -10; ey = Math.random() * canvas.height; }
+    if (side === 1) { ex = canvas.width + 10; ey = Math.random() * canvas.height; }
+    if (side === 2) { ex = Math.random() * canvas.width; ey = -10; }
+    if (side === 3) { ex = Math.random() * canvas.width; ey = canvas.height + 10; }
+    enemies.push({ x: ex, y: ey });
+    setTimeout(spawnEnemyLoop, 2000);
+  }
+}
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "ArrowUp") player.dir = { x: 0, y: -1 };
+  if (e.key === "ArrowDown") player.dir = { x: 0, y: 1 };
+  if (e.key === "ArrowLeft") player.dir = { x: -1, y: 0 };
+  if (e.key === "ArrowRight") player.dir = { x: 1, y: 0 };
+});
