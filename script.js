@@ -7,6 +7,7 @@ const answerInput = document.getElementById("answerInput");
 const feedback = document.getElementById("feedback");
 const nextBtn = document.getElementById("nextBtn");
 const scoreDisplay = document.getElementById("score");
+const correctSound = document.getElementById("correctSound"); // audio element
 
 // Load CSV with PapaParse
 Papa.parse("questions.csv", {
@@ -37,7 +38,6 @@ function showQuestion() {
   nextBtn.style.display = "none";
   answerInput.focus();
 
-  // Speak the English word automatically
   if (currentQuestion.en) {
     speak(currentQuestion.en);
   }
@@ -48,6 +48,12 @@ function showFeedback(correct, expected, userInput) {
     feedback.innerHTML = "✅ 正解！Good job!";
     score++;
     scoreDisplay.textContent = "Score: " + score;
+
+    // Play correct answer sound
+    if (correctSound) {
+      correctSound.currentTime = 0;
+      correctSound.play();
+    }
   } else {
     let mismatchIndex = [...expected].findIndex((char, i) => char !== userInput[i]);
     if (mismatchIndex === -1 && userInput.length > expected.length) {
@@ -67,12 +73,13 @@ function showFeedback(correct, expected, userInput) {
 
   answerInput.disabled = true;
   nextBtn.style.display = "inline-block";
+  nextBtn.focus(); // Focus the Next button
 }
 
 answerInput.addEventListener("keydown", function(e) {
   if (e.key === "Enter") {
     if (answerInput.disabled) {
-      showQuestion();
+      nextBtn.click();
     } else {
       const userAnswer = answerInput.value.trim();
       const expected = currentQuestion.en.trim();
@@ -84,7 +91,6 @@ answerInput.addEventListener("keydown", function(e) {
 
 nextBtn.addEventListener("click", showQuestion);
 
-// Optional: Manual speak button (if needed)
 const speakBtn = document.getElementById("speakBtn");
 if (speakBtn) {
   speakBtn.addEventListener("click", function() {
