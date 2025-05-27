@@ -1,0 +1,49 @@
+body {
+  font-family: Arial, sans-serif;
+  text-align: center;
+  background-color: #f9f9f9;
+}
+
+#score {
+  position: absolute;
+  top: 10px;
+  right: 20px;
+  font-weight: bold;
+}
+
+#streakLabel {
+  position: absolute;
+  top: 10px;
+  left: 20px;
+  font-weight: bold;
+}
+
+#quizScreen, #minigameScreen {
+  display: none;
+}
+
+#question {
+  font-size: 2em;
+  margin-top: 100px;
+}
+
+#answerInput {
+  font-size: 1.2em;
+  padding: 10px;
+  width: 300px;
+}
+
+#feedback {
+  margin-top: 20px;
+  font-size: 1.2em;
+}
+
+#nextBtn {
+  margin-top: 20px;
+  padding: 10px 20px;
+}
+
+canvas {
+  border: 1px solid #333;
+  background-color: #222;
+}
