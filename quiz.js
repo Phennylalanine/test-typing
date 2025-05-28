@@ -53,7 +53,7 @@ function startQuiz() {
 
 function showQuestion() {
   currentQuestion = getRandomQuestion();
-  questionDisplay.textContent = currentQuestion.jp;
+  questionDisplay.textContent = `${currentQuestion.en} - ${currentQuestion.jp}`;
   answerInput.value = "";
   answerInput.disabled = false;
   feedback.innerHTML = "";
@@ -104,7 +104,7 @@ answerInput.addEventListener("keydown", function(e) {
     } else {
       const userAnswer = answerInput.value.trim();
       const expected = currentQuestion.en.trim();
-      const isCorrect = userAnswer === expected;
+      const isCorrect = userAnswer.toLowerCase() === expected.toLowerCase();
       showFeedback(isCorrect, expected, userAnswer);
     }
   }
