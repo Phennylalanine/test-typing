@@ -1,37 +1,33 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
   <title>Typing Quiz RPG</title>
   <style>
-    canvas { border: 2px solid black; display: none; }
+    body { font-family: sans-serif; text-align: center; }
+    canvas { display: none; border: 1px solid black; }
     #quizScreen, #startScreen { display: none; }
-    #question { font-size: 20px; margin-bottom: 10px; }
-    #feedback { margin-top: 10px; }
   </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
 </head>
 <body>
-
   <div id="startScreen">
     <h1>Typing Quiz RPG</h1>
     <button id="startBtn">Start Quiz</button>
   </div>
 
   <div id="quizScreen">
-    <div id="question"></div>
-    <input type="text" id="answerInput" placeholder="Type your answer..." autocomplete="off" />
-    <div id="feedback"></div>
+    <h2 id="question">Question appears here</h2>
+    <input type="text" id="answerInput" placeholder="Type your answer" />
+    <p id="feedback"></p>
     <button id="nextBtn" style="display:none;">Next</button>
-    <div id="score">Score: 0</div>
-    <div id="streakDisplay">連続正解: 0</div>
+    <p id="score">Score: 0</p>
+    <p id="streakDisplay">連続正解: 0</p>
   </div>
 
-  <canvas id="gameCanvas" width="800" height="600"></canvas>
+  <canvas id="gameCanvas"></canvas>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
-  <script src="game.js"></script>
-  <script src="quiz.js"></script>
-
+  <script defer src="game.js"></script>
+  <script defer src="quiz.js"></script>
 </body>
 </html>
