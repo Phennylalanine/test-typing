@@ -2,6 +2,7 @@ let questions = [];
 let currentQuestion = null;
 let score = 0;
 let streak = 0;
+let playerLevel = 1; // ✅ Store level here
 
 const questionDisplay = document.getElementById("question");
 const answerInput = document.getElementById("answerInput");
@@ -44,7 +45,7 @@ function startQuiz() {
   gameCanvas.style.display = "none";
   score = 0;
   streak = 0;
-  scoreDisplay.textContent = "Score: 0";
+  scoreDisplay.textContent = `Score: 0 (LV ${playerLevel})`; // ✅ Show level
   streakDisplay.textContent = "連続正解: 0";
   showQuestion();
 }
@@ -65,7 +66,7 @@ function showFeedback(correct, expected, userInput) {
     feedback.innerHTML = "✅ 正解！Good job!";
     score++;
     streak++;
-    scoreDisplay.textContent = "Score: " + score;
+    scoreDisplay.textContent = `Score: ${score} (LV ${playerLevel})`;
     streakDisplay.textContent = "連続正解: " + streak;
 
     if (streak % 5 === 0) {
@@ -112,9 +113,15 @@ function launchGame() {
   quizScreen.style.display = "none";
   gameCanvas.style.display = "block";
   if (typeof initGame === "function") {
-    initGame();
+    initGame(playerLevel, returnToQuiz); // ✅ pass level and callback
   } else {
     console.error("initGame is not defined.");
     alert("Game failed to launch. Check game.js.");
   }
+}
+
+// ✅ Callback for returning from game
+function returnToQuiz(newLevel) {
+  playerLevel = newLevel;
+  startQuiz();
 }
