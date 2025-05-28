@@ -115,6 +115,18 @@ nextBtn.addEventListener("click", showQuestion);
 document.getElementById("startBtn").addEventListener("click", startQuiz);
 
 function launchGame() {
+  console.log("Launching game...");
+  quizScreen.style.display = "none";
+  gameCanvas.style.display = "block";
+  if (typeof initGame === "function") {
+    initGame();
+  } else {
+    console.error("initGame is not defined.");
+    alert("Game failed to launch. Check game.js.");
+  }
+}
+
+function launchGame() {
   quizScreen.style.display = "none";
   gameCanvas.style.display = "block";
   initGame(); // game.js will define this
