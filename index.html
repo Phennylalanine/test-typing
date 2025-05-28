@@ -1,29 +1,37 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Typing Quiz RPG</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
-  <script defer src="quiz.js"></script>
+  <style>
+    canvas { border: 2px solid black; display: none; }
+    #quizScreen, #startScreen { display: none; }
+    #question { font-size: 20px; margin-bottom: 10px; }
+    #feedback { margin-top: 10px; }
+  </style>
 </head>
 <body>
+
   <div id="startScreen">
-    <h1>Translate the sentence</h1>
+    <h1>Typing Quiz RPG</h1>
     <button id="startBtn">Start Quiz</button>
   </div>
 
-  <div id="quizScreen" style="display:none;">
+  <div id="quizScreen">
+    <div id="question"></div>
+    <input type="text" id="answerInput" placeholder="Type your answer..." autocomplete="off" />
+    <div id="feedback"></div>
+    <button id="nextBtn" style="display:none;">Next</button>
     <div id="score">Score: 0</div>
     <div id="streakDisplay">連続正解: 0</div>
-    <p id="question"></p>
-    <input type="text" id="answerInput">
-    <button id="nextBtn" style="display:none;">Next</button>
-    <div id="feedback"></div>
   </div>
 
-  <div id="gameCanvas" style="display:none;">
-    <!-- Your game canvas logic here -->
-    <p>Game launching...</p>
-  </div>
+  <canvas id="gameCanvas" width="800" height="600"></canvas>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+  <script src="game.js"></script>
+  <script src="quiz.js"></script>
+
 </body>
 </html>
