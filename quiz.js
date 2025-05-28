@@ -1,4 +1,3 @@
-// quiz.js
 let questions = [];
 let currentQuestion = null;
 let score = 0;
@@ -14,12 +13,11 @@ const quizScreen = document.getElementById("quizScreen");
 const gameCanvas = document.getElementById("gameCanvas");
 const streakDisplay = document.getElementById("streakDisplay");
 
-// Load CSV with PapaParse
 Papa.parse("questions.csv", {
   download: true,
   header: true,
   complete: function(results) {
-    questions = results.data.filter(q => q.jp && q.en); // remove empty rows
+    questions = results.data.filter(q => q.jp && q.en);
     showStartScreen();
   }
 });
@@ -59,10 +57,7 @@ function showQuestion() {
   feedback.innerHTML = "";
   nextBtn.style.display = "none";
   answerInput.focus();
-
-  if (currentQuestion.en) {
-    speak(currentQuestion.en);
-  }
+  speak(currentQuestion.en);
 }
 
 function showFeedback(correct, expected, userInput) {
@@ -111,11 +106,9 @@ answerInput.addEventListener("keydown", function(e) {
 });
 
 nextBtn.addEventListener("click", showQuestion);
-
 document.getElementById("startBtn").addEventListener("click", startQuiz);
 
 function launchGame() {
-  console.log("Launching game...");
   quizScreen.style.display = "none";
   gameCanvas.style.display = "block";
   if (typeof initGame === "function") {
@@ -124,10 +117,4 @@ function launchGame() {
     console.error("initGame is not defined.");
     alert("Game failed to launch. Check game.js.");
   }
-}
-
-function launchGame() {
-  quizScreen.style.display = "none";
-  gameCanvas.style.display = "block";
-  initGame(); // game.js will define this
 }
