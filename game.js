@@ -1,4 +1,3 @@
-// game.js
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 canvas.width = 800;
@@ -21,7 +20,7 @@ let keys = {};
 let projectiles = [];
 let enemies = [];
 let lastShotTime = 0;
-const shootInterval = 3000; // 1 shot every 3 seconds
+const shootInterval = 3000;
 
 function updateXP(amount) {
   player.xp += amount;
@@ -104,7 +103,6 @@ function updateProjectiles() {
   projectiles.forEach((p, index) => {
     p.x += p.dx;
     p.y += p.dy;
-    // Remove if off-screen
     if (p.x < 0 || p.x > canvas.width || p.y < 0 || p.y > canvas.height) {
       projectiles.splice(index, 1);
     }
@@ -113,7 +111,6 @@ function updateProjectiles() {
 
 function detectCollisions() {
   enemies.forEach((enemy, eIdx) => {
-    // Player collision
     const dx = player.x - enemy.x;
     const dy = player.y - enemy.y;
     if (Math.hypot(dx, dy) < player.size + enemy.size) {
@@ -125,7 +122,6 @@ function detectCollisions() {
       }
     }
 
-    // Projectile collisions
     projectiles.forEach((proj, pIdx) => {
       const dpx = proj.x - enemy.x;
       const dpy = proj.y - enemy.y;
@@ -152,12 +148,10 @@ function gameLoop() {
   moveEnemies();
   updateProjectiles();
   detectCollisions();
-
   drawPlayer();
   drawEnemies();
   drawProjectiles();
   drawHUD();
-
   requestAnimationFrame(gameLoop);
 }
 
@@ -178,7 +172,6 @@ function initGame() {
 document.addEventListener("keydown", (e) => {
   keys[e.key] = true;
 });
-
 document.addEventListener("keyup", (e) => {
   keys[e.key] = false;
 });
