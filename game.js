@@ -20,7 +20,8 @@ let keys = {};
 let projectiles = [];
 let enemies = [];
 let lastShotTime = 0;
-const shootInterval = 3000;
+const shootInterval = 2000;
+let levelUpEffectTimer = 0;
 
 function updateXP(amount) {
   player.xp += amount;
@@ -28,6 +29,23 @@ function updateXP(amount) {
     player.level++;
     player.xp = 0;
     player.nextLevelXP = player.level < 20 ? player.nextLevelXP + 10 : player.nextLevelXP + 20;
+
+    // Trigger level-up effect and return to quiz after 2 seconds
+    levelUpEffectTimer = 120; // 120 frames ≈ 2 seconds at 60fps
+
+    // Stop enemy spawning
+    clearInterval(spawnEnemyInterval);
+
+    // After effect, return to quiz screen
+    setTimeout(() => {
+      alert("レベルアップ！Level Up!");
+      // Return to quiz
+      if (typeof showStartScreen === "function") {
+        showStartScreen();
+      }
+      document.getElementById("quizScreen").style.display = "block";
+      document.getElementById("gameCanvas").style.display = "none";
+    }, 2000);
   }
 }
 
@@ -57,10 +75,23 @@ function drawProjectiles() {
 }
 
 function movePlayer() {
-  if (keys["ArrowUp"]) { player.y -= player.speed; player.dir = { x: 0, y: -1 }; }
-  if (keys["ArrowDown"]) { player.y += player.speed; player.dir = { x: 0, y: 1 }; }
-  if (keys["ArrowLeft"]) { player.x -= player.speed; player.dir = { x: -1, y: 0 }; }
-  if (keys["ArrowRight"]) { player.x += player.speed; player.dir = { x: 1, y: 0 }; }
+  let moveX = 0;
+  let moveY = 0;
+  if (keys["ArrowUp"]) moveY -= 1;
+  if (keys["ArrowDown"]) moveY += 1;
+  if (keys["ArrowLeft"]) moveX -= 1;
+  if (keys["ArrowRight"]) moveX += 1;
+
+  // Normalize movement for diagonal speed consistency
+  if (moveX !== 0 || moveY !== 0) {
+    const length = Math.hypot(moveX, moveY);
+    player.x += (moveX / length) * player.speed;
+    player.y += (moveY / length) * player.speed;
+
+    // Update direction for shooting to current movement vector (normalized)
+    player.dir.x = moveX / length;
+    player.dir.y = moveY / length;
+  }
 }
 
 function shootProjectile() {
@@ -94,8 +125,8 @@ function moveEnemies() {
     const dx = player.x - e.x;
     const dy = player.y - e.y;
     const dist = Math.hypot(dx, dy);
-    e.x += (dx / dist) * 1.5;
-    e.y += (dy / dist) * 1.5;
+    e.x += (dx / dist) * 1;
+    e.y += (dy / dist) * 1;
   });
 }
 
@@ -118,7 +149,9 @@ function detectCollisions() {
       enemies.splice(eIdx, 1);
       if (player.hp <= 0) {
         alert("ゲームオーバー！Game Over!");
-        showStartScreen();
+        if (typeof showStartScreen === "function") {
+          showStartScreen();
+        }
       }
     }
 
@@ -136,9 +169,20 @@ function detectCollisions() {
 
 function drawHUD() {
   ctx.fillStyle = "black";
+  ctx.font = "16px sans-serif";
   ctx.fillText(`HP: ${player.hp}`, 10, 20);
   ctx.fillText(`LV: ${player.level}`, 10, 40);
   ctx.fillText(`XP: ${player.xp}/${player.nextLevelXP}`, 10, 60);
+}
+
+// Visual effect on level up: flashes screen
+function drawLevelUpEffect() {
+  if (levelUpEffectTimer > 0) {
+    const alpha = Math.sin(levelUpEffectTimer / 10) * 0.5 + 0.5; // flicker effect
+    ctx.fillStyle = `rgba(255, 215, 0, ${alpha})`; // gold-ish glow
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    levelUpEffectTimer--;
+  }
 }
 
 function gameLoop() {
@@ -152,8 +196,13 @@ function gameLoop() {
   drawEnemies();
   drawProjectiles();
   drawHUD();
-  requestAnimationFrame(gameLoop);
+  drawLevelUpEffect();
+  if (levelUpEffectTimer === 0) {
+    requestAnimationFrame(gameLoop);
+  }
 }
+
+let spawnEnemyInterval;
 
 function initGame() {
   player.x = canvas.width / 2;
@@ -165,7 +214,10 @@ function initGame() {
   projectiles = [];
   enemies = [];
   lastShotTime = 0;
-  setInterval(spawnEnemy, 2000);
+  levelUpEffectTimer = 0;
+
+  // Start enemy spawning and game loop
+  spawnEnemyInterval = setInterval(spawnEnemy, 2000);
   gameLoop();
 }
 
