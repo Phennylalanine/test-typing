@@ -2,7 +2,7 @@ let questions = [];
 let currentQuestion = null;
 let score = 0;
 let streak = 0;
-let playerLevel = 1; // ✅ Store level here
+let playerLevel = 1; // Store player level here
 
 const questionDisplay = document.getElementById("question");
 const answerInput = document.getElementById("answerInput");
@@ -39,14 +39,22 @@ function showStartScreen() {
   gameCanvas.style.display = "none";
 }
 
-function startQuiz() {
+function showQuizScreen() {
   startScreen.style.display = "none";
   quizScreen.style.display = "block";
   gameCanvas.style.display = "none";
-  score = 0;
-  streak = 0;
-  scoreDisplay.textContent = `Score: 0 (LV ${playerLevel})`; // ✅ Show level
-  streakDisplay.textContent = "連続正解: 0";
+}
+
+// Modified startQuiz to NOT reset score and streak every time 
+// so progress persists when returning from the game
+function startQuiz() {
+  showQuizScreen();
+  // Only reset score and streak if you want to restart fresh:
+  if (score === 0 && streak === 0) {
+    // Or add a separate flag to detect a fresh start if needed
+  }
+  scoreDisplay.textContent = `Score: ${score} (LV ${playerLevel})`;
+  streakDisplay.textContent = `連続正解: ${streak}`;
   showQuestion();
 }
 
@@ -67,7 +75,7 @@ function showFeedback(correct, expected, userInput) {
     score++;
     streak++;
     scoreDisplay.textContent = `Score: ${score} (LV ${playerLevel})`;
-    streakDisplay.textContent = "連続正解: " + streak;
+    streakDisplay.textContent = `連続正解: ${streak}`;
 
     if (streak % 5 === 0) {
       launchGame();
@@ -107,20 +115,26 @@ answerInput.addEventListener("keydown", function(e) {
 });
 
 nextBtn.addEventListener("click", showQuestion);
-document.getElementById("startBtn").addEventListener("click", startQuiz);
+document.getElementById("startBtn").addEventListener("click", () => {
+  score = 0;
+  streak = 0;
+  playerLevel = 1;
+  startQuiz();
+});
 
 function launchGame() {
   quizScreen.style.display = "none";
   gameCanvas.style.display = "block";
   if (typeof initGame === "function") {
-    initGame(playerLevel, returnToQuiz); // ✅ pass level and callback
+    // Pass current playerLevel and returnToQuiz callback to game
+    initGame(playerLevel, returnToQuiz);
   } else {
     console.error("initGame is not defined.");
     alert("Game failed to launch. Check game.js.");
   }
 }
 
-// ✅ Callback for returning from game
+// Callback called by game when player finishes and returns
 function returnToQuiz(newLevel) {
   playerLevel = newLevel;
   startQuiz();
