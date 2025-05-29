@@ -20,7 +20,7 @@ let keys = {};
 let projectiles = [];
 let enemies = [];
 let lastShotTime = 0;
-const shootInterval = 2000;
+const shootInterval = 1500;
 let levelUpEffectTimer = 0;
 
 function updateXP(amount) {
